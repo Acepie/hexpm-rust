@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Fixed a bug where the package bump of a pre was a patch bump
+
 ## v2.1.1 - 2023-11-02
 
 - Fixed a bug where the package name validation regex was too strict.
