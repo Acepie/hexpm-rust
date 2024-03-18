@@ -95,6 +95,18 @@ impl Version {
         }
     }
 
+    fn bump_pre(&self) -> Self {
+        let mut pre = self.pre.clone();
+        pre.push(Identifier::Numeric(1));
+        Self {
+            major: self.major,
+            minor: self.minor,
+            patch: self.patch,
+            pre,
+            build: None,
+        }
+    }
+
     /// Parse a version.
     pub fn parse(input: &str) -> Result<Self, parser::Error> {
         let mut parser = Parser::new(input)?;
@@ -180,9 +192,33 @@ impl pubgrub::version::Version for Version {
     }
 
     fn bump(&self) -> Self {
-        self.bump_patch()
+        if self.pre.is_empty() {
+            self.bump_patch()
+        } else {
+            self.bump_pre()
+        }
     }
 }
+
+macro_rules! assert_bump {
+    ($name:ident, $left:expr, $right:expr) => {
+        #[test]
+        fn $name() {
+            use pubgrub::version::Version as _;
+            let left = Version::parse($left).unwrap();
+            let right = Version::parse($right).unwrap();
+            assert_eq!(left.bump(), right)
+        }
+    };
+}
+
+assert_bump!(bump_major, "1.0.0", "1.0.1");
+
+assert_bump!(bump_minor, "1.1.0", "1.1.1");
+
+assert_bump!(bump_patch, "1.1.1", "1.1.2");
+
+assert_bump!(bump_pre, "1.1.1-rc1", "1.1.1-rc1.1");
 
 impl<'a> TryFrom<&'a str> for Version {
     type Error = parser::Error;
